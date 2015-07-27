@@ -6,7 +6,7 @@ Description
 Simple Video/Image Sequence Recorder/Extractor
 
 - Extracts image sequence from videos (currently only .mp4 supported)
-- Saves image sequences from live view
+- Saves image sequences (currently .png-format) from live view
 - Live view
 
 
