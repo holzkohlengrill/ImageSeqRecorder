@@ -7,109 +7,141 @@
 #include <iomanip>
 
 #include <sys/types.h>      // for folder cration in ubuntu
-#include <sys/stat.h>       // for folder cration in ubuntu
-#include <unistd.h>         // for folder cration in ubuntu
+#include <sys/stat.h>         // for folder cration in ubuntu
+#include <unistd.h>            // for folder cration in ubuntu
 
-using namespace cv;
-using namespace std;
-
-enum Mode {LIVE, IMAGES};
-bool flag = 0;
+//############## VARIABLES #######################
+enum Mode{IMGCAP, VIDEXT, VIEW, EXIT};
+cv::Mat frameShow;
+cv::Mat frame;
 
 //############## SETTINGS ########################
-const Mode mode = IMAGES;
-const size_t nbimg = 0;
-//################################################
+Mode mode = VIEW;
+//const size_t nbimg = 0;
 
-bool capture(cv::Mat &frame);
+//############## FUNCTION PROTOTYPES ###############
+void liveView();
+void imgcap();
+bool vidext();
 bool keyhandler();
-void showText(std::string text, cv::Mat &img);
+void showText(std::string text, cv::Mat &img, int pos);
+void createSavesFolder(std::string filename);
+void capture(cv::Mat &img);
+void capture(size_t &count, cv::Mat &img);
+
 
 int main(int argc, char *argv[]){
-  stringstream filename;
-  struct stat st = {0};
-
-  if (stat("../saves", &st) == -1) {      // crating directory if not existing
-      mkdir("../saves", 0700);
-    }
-  for(size_t i = 0; ; i++){
-      Mat frame;
-      capture(frame);
-      Mat frameShow = frame.clone();
-      if (mode == IMAGES){
-
-          if(!flag){
-              std::cout << "\tPress 's' to start/stop recording" << endl;
-              while(!flag){
-                  capture(frame);
-                  frameShow = frame.clone();
-                  showText("Press 's' to start/stop recording", frameShow);
-                  imshow("Image Sequence Recorder", frameShow);
-                  if(keyhandler()) return -1;
-                }
-            } else {
-              filename << "img" << setw(5) << setfill('0') << to_string(i) << ".png";
-              stringstream msg;
-              msg << "File " << filename.str() << " saved!";
-              filename.str("../saves/"+filename.str());
-              imwrite(filename.str(), frame);
-              showText(msg.str(), frameShow);
-              std::stringstream temp;
-              temp << "\t(info): " << msg.str();
-              std::string dmsg = temp.str();
-              cout << dmsg << endl;
-              filename.str("");
-              msg.str("");
-              temp.str("");
-            }
+  createSavesFolder("../saves");
+  createSavesFolder("../vid_extr2");
+  while(true){
+      switch(mode){
+        case IMGCAP : imgcap(); break;
+        case VIDEXT : vidext(); break;
+        case VIEW : liveView(); break;
+        case EXIT : return(0);
         }
-      imshow("Image Sequence Recorder", frameShow);
-      if (nbimg != 0){
-          if(nbimg >= i){
-              break;
-            }
-        }
-      if(keyhandler()) return -1;
+      keyhandler();
+      cv::imshow("Imeo Tool", frameShow);
+      cv::waitKey(1);
     }
-  return 0;
 }
 
-bool capture(cv::Mat &frame){
-  static bool init = 0;
-  static VideoCapture cap(0);
-  if(init == 0){
-      if (!cap.isOpened()){
-          cerr << "Cannot open the video cam" << endl;
-          return -1;
-        }
-      init = 1;
-    }
-  bool bSuccess = cap.read(frame);
-
-  if (!bSuccess){
-      cerr << "Cannot read a frame from video stream" << endl;
-      return -1;
-    }
-  return 0;
+inline void liveView(){
+  capture(frameShow);
+  showText("Press 's' to start/stop recording", frameShow, 3);
+  showText("Press 'v' to extract an img seq of a .mp4 video file", frameShow, 2);
 }
 
-bool keyhandler(){
-  switch(waitKey(1)){
-    case 's' : flag = !flag; break;
-    case 27 : cout << "\t(info) ESC key pressed by user" << endl; return -1; break;
-    }
-  return 0;
+inline void imgcap(){
+  static size_t i = 0;
+  capture(frameShow);
+  frame = frameShow.clone();
+  std::stringstream filename;
+  filename << "img" << std::setw(5) << std::setfill('0') << std::to_string(i) << ".png";
+  std::stringstream msg;
+  msg << "File " << filename.str() << " saved!";
+  filename.str("../saves/"+filename.str());
+  cv::imwrite(filename.str(), frame);
+  showText(msg.str(), frameShow, 2);
+  i++;
 }
 
-void showText(std::string text, cv::Mat &img){
+inline bool vidext(){
+  static size_t i = 0;
+  static size_t count = 0;
+  static cv::VideoCapture video("../dataset2.mp4");
+  static const size_t count_max = (video.get(CV_CAP_PROP_FRAME_COUNT)-1);
+  if(count >= count_max){
+      showText("Video extracting finished", frameShow, 2);
+      cv::waitKey(1000);
+      showText("Video extracting finished.", frameShow, 2);
+      cv::waitKey(1000);
+      showText("Video extracting finished..", frameShow, 2);
+      cv::waitKey(1000);
+      showText("Video extracting finished...", frameShow, 2);
+      cv::waitKey(1000);
+      showText("\n>> Starting livestream in 2 seconds...", frameShow, 2);
+      cv::waitKey(2000);
+      mode = VIEW;
+      return 0;
+    } else{
+      capture(count, frame);
+      frameShow = frame.clone();
+
+      std::stringstream filename;
+      filename << "vid" << std::setw(5) << std::setfill('0') << std::to_string(count) << ".png";
+      std::stringstream msg;
+      msg << "File " << filename.str() << " saved!";
+      filename.str("../vid_extr2/"+filename.str());
+      count++;
+
+      cv::imwrite(filename.str(), frame);
+      showText(msg.str(), frameShow, 2);
+    }
+}
+
+inline bool keyhandler(){
+  switch(cv::waitKey(10)){
+    case 's' : mode = mode == IMGCAP ? VIEW : IMGCAP; break;
+    case 'v' : mode = mode == VIDEXT ? VIEW : VIDEXT; break;
+    case 27 : std::cout << "\t(info) ESC key pressed by user" << std::endl; mode = EXIT; return(false); break;
+    }
+  return true;
+}
+
+inline void showText(std::string text, cv::Mat &img, int pos){
   int baseline = 0;
   const int tFont = cv::FONT_HERSHEY_SIMPLEX;
-  const double tScale = 1.0;
+  const double tScale = 0.7;
   const cv::Scalar tColour(255, 0, 60);
   const int tLineType = cv::LineTypes::LINE_AA;
   const int tThickness = 1;
-
   cv::Size textprop = cv::getTextSize(text, tFont, tScale, tThickness, &baseline);
-  cv::Point tOrigin(static_cast<int>(img.cols/2), static_cast<int>(img.rows-textprop.height*3/2));
+  cv::Point tOrigin(static_cast<int>(img.cols/2), static_cast<int>(img.rows-textprop.height*pos*1.2));
   cv::putText(img, text, tOrigin, tFont, tScale, tColour, tThickness, tLineType, false);
+}
+
+void createSavesFolder(std::string filename){
+  struct stat st = {0};
+  if (stat(filename.c_str(), &st) == -1) {      // creating directory if not existing
+      mkdir(filename.c_str(), 0700);
+    }
+}
+
+void capture(cv::Mat &img){
+  switch(mode){
+    case VIEW :
+    case IMGCAP :
+      static cv::VideoCapture cap(0);
+      cap >> img;
+      break;
+    default : // do nothing
+      break;
+    }
+}
+
+void capture(size_t &count, cv::Mat &img){
+  static cv::VideoCapture video("../dataset2.mp4");
+  video.set(CV_CAP_PROP_POS_FRAMES, count);
+  video.read(img);
 }
