@@ -1,10 +1,11 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/videoio.hpp"
 #include "opencv2/imgproc.hpp"
+
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <iomanip>
+#include <iomanip>            // for setw(), setfill(), etc.
 
 #include <sys/types.h>      // for folder cration in ubuntu
 #include <sys/stat.h>         // for folder cration in ubuntu
@@ -20,13 +21,21 @@ Mode mode = VIEW;
 //const size_t nbimg = 0;
 
 //############## FUNCTION PROTOTYPES ###############
+// camera live view
 void liveView();
+// saves images from camera live view
 void imgcap();
+// extracts an image sequence from a video
 bool vidext();
+// program control
 bool keyhandler();
+// text overlay in live view
 void showText(std::string text, cv::Mat &img, int pos);
+// folder creation
 void createSavesFolder(std::string filename);
+// nomal capture
 void capture(cv::Mat &img);
+// capture for creating image sequences from videos >> esp. for vidext()
 void capture(size_t &count, cv::Mat &img);
 
 
