@@ -13,6 +13,7 @@
 
 //############## VARIABLES #######################
 enum Mode{IMGCAP, VIDEXT, VIEW, EXIT};
+//TODO: remove global variables & use classes
 cv::Mat frameShow;
 cv::Mat frame;
 
