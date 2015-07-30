@@ -1,5 +1,5 @@
-# ImageSeqRecorder
-Image Sequence Recorder (Ubuntu-like systems only)
+# Imeo_tool
+Imeo_tool (Ubuntu-like systems only)
 
 Description
 ===============
