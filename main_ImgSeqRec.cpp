@@ -7,9 +7,9 @@
 #include <string>
 #include <iomanip>            // for setw(), setfill(), etc.
 
-#include <sys/types.h>      // for folder cration in ubuntu
-#include <sys/stat.h>         // for folder cration in ubuntu
-#include <unistd.h>            // for folder cration in ubuntu
+#include <sys/types.h>      // for folder creation in ubuntu
+#include <sys/stat.h>         // for folder creation in ubuntu
+#include <unistd.h>            // for folder creation in ubuntu
 
 //############## VARIABLES #######################
 enum Mode{IMGCAP, VIDEXT, VIEW, EXIT};
